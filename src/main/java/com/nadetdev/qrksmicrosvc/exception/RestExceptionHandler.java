@@ -45,9 +45,7 @@ public class RestExceptionHandler implements ExceptionMapper<HibernateException>
     private static <T extends Throwable> Optional<T> getExceptionChain(Throwable throwable, Class<T> exceptionClass) {
         while (throwable != null) {
             if(exceptionClass.isInstance(throwable)) {
-                Optional<T> throwable1 = Optional.of((T) throwable);
-                return
-                        throwable1;
+                return Optional.of((T) throwable);
             }
             throwable = throwable.getCause();
         }
