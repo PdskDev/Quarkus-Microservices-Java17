@@ -1,6 +1,7 @@
 package com.nadetdev.qrksmicrosvc.task;
 
 import com.nadetdev.qrksmicrosvc.user.UserService;
+import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.security.UnauthorizedException;
 import io.smallrye.mutiny.Uni;
@@ -21,6 +22,7 @@ public class TaskService {
         this.userService = userService;
     }
 
+    @WithSession
     public Uni<Task> finddById(long id){
         return userService.getCurrentUser()
                 .chain(user -> Task.<Task>findById(id)
@@ -37,6 +39,7 @@ public class TaskService {
                 );
     }
 
+    @WithSession
     public Uni<List<Task>> listForUser() {
         return  userService.getCurrentUser()
                 .chain(user -> Task.find("user", user).list());

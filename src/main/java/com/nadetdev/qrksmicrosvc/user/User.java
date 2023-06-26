@@ -1,5 +1,6 @@
 package com.nadetdev.qrksmicrosvc.user;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,6 +17,11 @@ public class User extends PanacheEntity {
 
     @Column(nullable = false)
     String password;
+
+    @JsonProperty("password")
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false)
