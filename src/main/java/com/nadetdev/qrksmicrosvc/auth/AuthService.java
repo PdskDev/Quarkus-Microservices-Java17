@@ -30,7 +30,7 @@ public class AuthService {
         return userService.findByName(authRequest.name())
                 .onItem()
                 .transform(Unchecked.function(user -> {
-                    if(user == null || !UserService.matches(user, authRequest.password())) {
+                    if(user == null || UserService.passwordMatches(user, authRequest.password())) {
                         throw new AuthenticationFailedException("Invalid credentials");
                     }
                     return Jwt.issuer(issuer)
