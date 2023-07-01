@@ -14,4 +14,7 @@ INSERT INTO "projects" ("id", "name", "user_id", "created", "version")
 VALUES (0, 'Work', 0, NOW(), 0)
     ON CONFLICT DO NOTHING;
 
+CREATE SEQUENCE hibernate_sequence START 1;
+
 ALTER SEQUENCE IF EXISTS hibernate_sequence RESTART WITH 10;
+
