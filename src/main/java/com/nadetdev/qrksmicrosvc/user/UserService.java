@@ -6,13 +6,24 @@ import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.unchecked.Unchecked;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.hibernate.ObjectNotFoundException;
 
 import java.util.List;
 
 @ApplicationScoped
 public class UserService {
+    private final JsonWebToken jwt;
+
+    @Inject
+    public UserService(JsonWebToken jwt) {
+        this.jwt = jwt;
+    }
 
     @WithSession
     public Uni<User> findById(long id) {
@@ -39,7 +50,10 @@ public class UserService {
     @WithTransaction
     public Uni<User> update(User user) {
         return findById(user.id)
-                .chain(u -> User.getSession())
+                .chain(u -> {
+                    user.setPassword(u.password);
+                    return User.getSession();
+                })
                 .chain(s -> s.merge(user));
     }
 
@@ -56,11 +70,22 @@ public class UserService {
 
     @WithSession
     public Uni<User> getCurrentUser(){
-        //Todo -- added security
-        return User.find("order by ID").firstResult();
+        return findByName(jwt.getName());
     }
 
-    public static boolean matches(User user, String password) {
-        return BcryptUtil.matches(password, user.password);
+    public static boolean passwordMatches(User user, String password) {
+        return !BcryptUtil.matches(password, user.password);
+    }
+
+    @WithTransaction
+    public Uni<User> changePassword(String currentPassword, String newPassword) {
+        return getCurrentUser()
+                .chain(Unchecked.function(u -> {
+                    if(passwordMatches(u, currentPassword)){
+                        throw new ClientErrorException("Current password does not match", Response.Status.CONFLICT);
+                    }
+                    u.setPassword(BcryptUtil.bcryptHash(newPassword));
+                    return u.persistAndFlush();
+                }));
     }
 }

@@ -1,6 +1,7 @@
 package com.nadetdev.qrksmicrosvc.user;
 
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -9,8 +10,8 @@ import org.jboss.resteasy.reactive.ResponseStatus;
 import java.util.List;
 
 @Path("/api/v1/users")
+@RolesAllowed("admin")
 public class UserResource {
-
     private final UserService userService;
 
     @Inject
@@ -56,8 +57,16 @@ public class UserResource {
 
     @GET
     @Path("self")
+    @RolesAllowed("user")
     public Uni<User> getCurrenUser(){
         return userService.getCurrentUser();
+    }
+
+    @PUT
+    @Path("self/password")
+    @RolesAllowed("user")
+    public Uni<User> changePassword(PasswordChange passwordChange){
+        return userService.changePassword(passwordChange.currentPassword(), passwordChange.newPassword());
     }
 
 
