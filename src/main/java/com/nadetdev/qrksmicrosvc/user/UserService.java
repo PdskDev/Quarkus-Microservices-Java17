@@ -10,6 +10,7 @@ import io.smallrye.mutiny.unchecked.Unchecked;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.hibernate.ObjectNotFoundException;
@@ -26,28 +27,33 @@ public class UserService {
     }
 
     @WithSession
+    @Context
     public Uni<User> findById(long id) {
         return User.<User>findById(id)
                 .onItem().ifNull().failWith(() -> new ObjectNotFoundException(id, "User"));
     }
 
     @WithSession
+    @Context
     public Uni<User> findByName(String name) {
         return User.find("name", name).firstResult();
     }
 
     @WithSession
+    @Context
     public Uni<List<User>> list() {
         return User.listAll();
     }
 
     @WithTransaction
+    @Context
     public Uni<User> create(User user) {
         user.password = BcryptUtil.bcryptHash(user.password);
         return user.persistAndFlush();
     }
 
     @WithTransaction
+    @Context
     public Uni<User> update(User user) {
         return findById(user.id)
                 .chain(u -> {
@@ -58,6 +64,7 @@ public class UserService {
     }
 
     @WithTransaction
+    @Context
     public Uni<Void> delete(long id) {
         return findById(id)
                 .chain(u -> Uni.combine().all().unis(
@@ -69,6 +76,7 @@ public class UserService {
     }
 
     @WithSession
+    @Context
     public Uni<User> getCurrentUser(){
         return findByName(jwt.getName());
     }
@@ -78,6 +86,7 @@ public class UserService {
     }
 
     @WithTransaction
+    @Context
     public Uni<User> changePassword(String currentPassword, String newPassword) {
         return getCurrentUser()
                 .chain(Unchecked.function(u -> {
